@@ -33,7 +33,9 @@ def render(conn, identity, destination, at_frame=0, frame_count=None):
                 if len(data) != size:
                     raise ValueError('truncated spherical source spool')
                 image = np.frombuffer(data, dtype='uint8').reshape(source['height'], source['width'], 3)
-                rotation = sphere_geometry.orientation(plan['keys'], (frame-at_frame+.5)*40)
+                # The camera clock is cut-relative, independent of where this
+                # preview or delivery slice starts.
+                rotation = sphere_geometry.orientation(plan['keys'], (frame+.5)*40)
                 uv = sphere_geometry.coordinates(rays, rotation, source['width'], source['height'])
                 out.write(sphere_signal.sample(image, uv).tobytes())
         result = root/'viewport.mkv'

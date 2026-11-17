@@ -1,7 +1,7 @@
 """Frozen full-sphere source cuts and view trajectories."""
 import math
 import numpy as np
-from . import media_sources, stitch_plan
+from . import media_sources, sphere_geometry, stitch_plan
 
 
 def create(conn, asset_id, start_ms, duration_ms, width, height, horizontal_fov, keys):
@@ -29,7 +29,9 @@ def create(conn, asset_id, start_ms, duration_ms, width, height, horizontal_fov,
         norm = float(np.linalg.norm(q))
         if norm < 1e-8 or not math.isfinite(norm):
             raise ValueError('orientation has no finite direction')
-        q = (np.asarray(q)/norm).tolist()
+        # One canonical representative per orientation, so equivalent signed
+        # records yield byte-identical plans and the same camera path.
+        q = sphere_geometry.canonical(q).tolist()
         # Exactly antipodal *rotations*, unlike opposite quaternion signs,
         # have no unique shortest turn. Require an intermediate operator key.
         if clean and abs(float(np.dot(q, clean[-1]['quaternion']))) < 1e-8:
